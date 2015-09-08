@@ -28,6 +28,8 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log("Serving request type " + request.method + " for url " + request.url);
+  //console.log(request);
+  
 
   // The outgoing status.
   var statusCode = 200;
@@ -39,20 +41,57 @@ var requestHandler = function(request, response) {
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "text/plain";
+  headers['Content-Type'] = "application/json";
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+  
+  var data = '';
+  var responseEnd = {};
 
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  response.end("Hello, World!");
+  if (request.url.slice(0, 9) === '/classes/') {     
+    
+    if (request.method === 'POST') {
+      statusCode = 201;      
+      // console.log('POST request received!');
+      request.on('data', function(chunk) {
+        // console.log(chunk);
+        // console.log(typeof chunk);  
+        data += chunk;
+      });
+      request.on('end', function() {
+      var parsedData = JSON.parse(data);
+        // console.log('POST data: %s', data);
+        // console.log(request.url);
+         console.log(parsedData);
+         console.log(typeof parsedData);
+         messages.push(parsedData);
+         responseEnd = parsedData;
+      });
+    }
+
+    // Make sure to always call response.end() - Node may not send
+    // anything back to the client until you do. The string you pass to
+    // response.end() will be the body of the response - i.e. what shows
+    // up in the browser.
+    //
+    // Calling .end "flushes" the response's internal buffer, forcing
+    // node to actually send all the data over to the client.
+    
+    if (request.method === 'GET') {
+      console.log('GET request received!');
+
+      responseEnd = {results: messages};
+    }
+  }
+  else {
+    statusCode = 404;
+  }
+
+  response.writeHead(statusCode, headers);
+  // console.log(messages[0]);
+  // console.log(typeof messages[0]);
+  response.end(JSON.stringify(responseEnd));
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -69,5 +108,11 @@ var defaultCorsHeaders = {
   "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
   "access-control-allow-headers": "content-type, accept",
   "access-control-max-age": 10 // Seconds.
+};
+
+var messages = [];
+
+module.exports = {
+  requestHandler: requestHandler
 };
 
