@@ -92,7 +92,7 @@ $(function() {
     },
     populateMessages: function(results, animate) {
       // Clear existing messages
-      console.log('populating the messages...');
+      console.log('populating messages...', results);
       app.clearMessages();
       app.stopSpinner();
       if (Array.isArray(results)) {
